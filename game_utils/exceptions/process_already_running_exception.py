@@ -1,0 +1,2 @@
+class ProcessAlreadyRunningException(Exception):
+    pass
