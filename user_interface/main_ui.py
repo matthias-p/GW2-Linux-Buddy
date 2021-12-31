@@ -1,10 +1,11 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QAction, QListWidget, \
-    QAbstractItemView
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QAction, \
+    QAbstractItemView, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtCore import Qt
 
 from game_utils.client_list import ClientList
 from lb_settings.settings import Settings
-from user_interface.settings_ui import SettingsUI
 from user_interface.add_account_ui import AddAccountUI
+from user_interface.settings_ui import SettingsUI
 
 
 class MainUI(QMainWindow):
@@ -16,10 +17,10 @@ class MainUI(QMainWindow):
         # References to different UI elements
         self.settings_ui = SettingsUI(settings=settings)
         self.add_account_ui = AddAccountUI(client_list=self.client_list,
-                                           callback=self.populate_client_list_view)
+                                           callback=self.populate_client_table_widget)
 
         # UI elements
-        self.client_list_view = QListWidget()
+        self.client_table_widget = QTableWidget()
 
         self.launch_btn = QPushButton("Launch")
 
@@ -55,14 +56,21 @@ class MainUI(QMainWindow):
         self.statusBar()
 
         # UI Elements
-        self.client_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.populate_client_list_view()
+        self.client_table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.client_table_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.client_table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.client_table_widget.setColumnCount(3)
+        self.client_table_widget.setHorizontalHeaderLabels(["Account Name", "Process", "PID"])
+        self.client_table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.client_table_widget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.client_table_widget.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.populate_client_table_widget()
 
         self.launch_btn.clicked.connect(self.launch_btn_clicked)
 
         # Layout
         central_layout = QVBoxLayout()
-        central_layout.addWidget(self.client_list_view)
+        central_layout.addWidget(self.client_table_widget)
         central_layout.addWidget(self.launch_btn)
 
         central_widget = QWidget()
@@ -76,9 +84,18 @@ class MainUI(QMainWindow):
     def show_settings_ui(self):
         self.settings_ui.show()
 
-    def populate_client_list_view(self):
-        self.client_list_view.clear()
-        self.client_list_view.addItems(self.client_list)
+    def populate_client_table_widget(self):
+        self.client_table_widget.setRowCount(0)
+        for client in self.client_list:
+            c = self.client_list.get_client(client)
+            rows = self.client_table_widget.rowCount()
+            self.client_table_widget.insertRow(rows)
+
+            self.client_table_widget.setItem(rows, 0, QTableWidgetItem(client))
+            self.client_table_widget.setItem(rows, 1, QTableWidgetItem(
+                "Running" if c.process is not None else "n/a"))
+            self.client_table_widget.setItem(rows, 2, QTableWidgetItem(
+                c.process.pid if c.process is not None else "n/a"))
 
     def add_account_action_triggered(self):
         self.add_account_ui.show()
