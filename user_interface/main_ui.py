@@ -39,7 +39,12 @@ class MainUI(QMainWindow):
         add_account_action = QAction("Add account", self)
         add_account_action.triggered.connect(self.add_account_action_triggered)
 
+        update_account_action = QAction("Update accounts", self)
+        update_account_action.setStatusTip("This patches the locales to the latest versions")
+        update_account_action.triggered.connect(self.update_account_action_triggered)
+
         account_menu.addAction(add_account_action)
+        account_menu.addAction(update_account_action)
 
         settings_action = QAction("Settings", self)
         settings_action.triggered.connect(self.show_settings_ui)
@@ -77,6 +82,9 @@ class MainUI(QMainWindow):
 
     def add_account_action_triggered(self):
         self.add_account_ui.show()
+
+    def update_account_action_triggered(self):
+        self.client_list.patch_all()
 
     def launch_btn_clicked(self):
         pass
