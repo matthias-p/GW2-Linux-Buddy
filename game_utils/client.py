@@ -10,7 +10,8 @@ from game_utils.exceptions.process_not_running_exception import ProcessNotRunnin
 
 
 class Client:
-    def __init__(self, wineprefix_path: Path, gamelauncher_path: Path):
+    def __init__(self, name: str, wineprefix_path: Path, gamelauncher_path: Path):
+        self.name = name
         self.wineprefix_path = wineprefix_path
         self.gamelauncher_path = gamelauncher_path
 
@@ -27,7 +28,8 @@ class Client:
             arguments = []
 
         self.process = subprocess.Popen(["wine", self.gamelauncher_path] + arguments,
-                                        env=dict(os.environ, WINEPREFIX=self.wineprefix_path))
+                                        env=dict(os.environ, WINEPREFIX=self.wineprefix_path),
+                                        stderr=subprocess.DEVNULL)
 
         if wait_for_exit:
             self.process.wait()
@@ -45,7 +47,7 @@ class Client:
 
         process_code = self.process.poll()
         while process_code is None:
-            time.sleep(1)
+            time.sleep(.5)
             process_code = self.process.poll()
 
         self.process = None

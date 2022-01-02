@@ -16,14 +16,15 @@ class ClientList:
 
     def _init_client_dict(self) -> None:
         for wineprefix_dir in sorted(self.settings.wineprefix_path.iterdir()):
-            self.client_dict[wineprefix_dir.name] = Client(wineprefix_dir,
+            self.client_dict[wineprefix_dir.name] = Client(wineprefix_dir.name, wineprefix_dir,
                                                            self.settings.gamelauncher_path)
 
     def get_client(self, name: str) -> Client:
         return self.client_dict.get(name)
 
     def add_client(self, name: str) -> Client:
-        new_client = Client(self.settings.wineprefix_path / name, self.settings.gamelauncher_path)
+        new_client = Client(name, self.settings.wineprefix_path / name,
+                            self.settings.gamelauncher_path)
         self.client_dict[name] = new_client
         return new_client
 

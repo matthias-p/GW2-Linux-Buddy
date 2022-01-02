@@ -1,8 +1,13 @@
+from typing import List
+import threading
+
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QAction, \
     QAbstractItemView, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
 
-from game_utils.client_list import ClientList
+from game_utils.client_list import ClientList, Client
+from game_utils.exceptions.process_not_running_exception import ProcessNotRunningException
 from lb_settings.settings import Settings
 from user_interface.add_account_ui import AddAccountUI
 from user_interface.settings_ui import SettingsUI
@@ -81,6 +86,13 @@ class MainUI(QMainWindow):
         self.resize(640, 480)
         self.setWindowTitle("Linux Buddy")
 
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        for client_name in self.client_list:
+            try:
+                self.client_list.get_client(client_name).stop()
+            except ProcessNotRunningException:
+                pass
+
     def show_settings_ui(self):
         self.settings_ui.show()
 
@@ -93,7 +105,7 @@ class MainUI(QMainWindow):
 
             self.client_table_widget.setItem(rows, 0, QTableWidgetItem(client))
             self.client_table_widget.setItem(rows, 1, QTableWidgetItem(
-                "Running" if c.process is not None else "n/a"))
+                "Running" if c.process is not None else "Not Running"))
             self.client_table_widget.setItem(rows, 2, QTableWidgetItem(
                 c.process.pid if c.process is not None else "n/a"))
 
@@ -104,4 +116,15 @@ class MainUI(QMainWindow):
         self.client_list.patch_all()
 
     def launch_btn_clicked(self):
-        pass
+        row: List[QTableWidgetItem] = self.client_table_widget.selectedItems()
+        client: Client = self.client_list.get_client(row[0].text())
+        client.launch()
+        row[1].setText("Running")
+        row[2].setText(str(client.process.pid))
+
+        threading.Thread(target=client.poll_status, args=(self.reset_client_process, )).start()
+
+    def reset_client_process(self, client: Client):
+        x: QTableWidgetItem = self.client_table_widget.findItems(client.name, Qt.MatchContains)[0]
+        self.client_table_widget.item(x.row(), 1).setText("Not Running")
+        self.client_table_widget.item(x.row(), 2).setText("n/a")
