@@ -39,7 +39,6 @@ class Client:
             raise ProcessNotRunningException("Process is not running")
 
         self.process.terminate()
-        self.process = None
 
     def poll_status(self, callback: Callable) -> int:
         if self.process is None:

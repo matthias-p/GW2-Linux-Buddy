@@ -1,16 +1,17 @@
-from typing import List
 import threading
+from typing import List
 
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QAction, \
-    QAbstractItemView, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QAction, \
+    QTableWidgetItem, QHeaderView
 
 from game_utils.client_list import ClientList, Client
 from game_utils.exceptions.process_not_running_exception import ProcessNotRunningException
 from lb_settings.settings import Settings
 from user_interface.add_account_ui import AddAccountUI
 from user_interface.settings_ui import SettingsUI
+from user_interface.widgets.custom_table_widget import CustomTableWidget
 
 
 class MainUI(QMainWindow):
@@ -25,7 +26,7 @@ class MainUI(QMainWindow):
                                            callback=self.populate_client_table_widget)
 
         # UI elements
-        self.client_table_widget = QTableWidget()
+        self.client_table_widget = CustomTableWidget(self)
 
         self.launch_btn = QPushButton("Launch")
 
@@ -61,14 +62,12 @@ class MainUI(QMainWindow):
         self.statusBar()
 
         # UI Elements
-        self.client_table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.client_table_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.client_table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.client_table_widget.setColumnCount(3)
         self.client_table_widget.setHorizontalHeaderLabels(["Account Name", "Process", "PID"])
         self.client_table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.client_table_widget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.client_table_widget.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
         self.populate_client_table_widget()
 
         self.launch_btn.clicked.connect(self.launch_btn_clicked)
