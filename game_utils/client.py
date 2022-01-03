@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union, Callable
 import shutil
 
+from game_utils.launch_settings import LaunchSettings
 from game_utils.exceptions.process_already_running_exception import ProcessAlreadyRunningException
 from game_utils.exceptions.process_not_running_exception import ProcessNotRunningException
 
@@ -16,6 +17,7 @@ class Client:
         self.gamelauncher_path = gamelauncher_path
 
         self.process: Union[subprocess.Popen, None] = None
+        self.launch_settings = LaunchSettings(self.name)
 
         if not wineprefix_path.exists():
             wineprefix_path.mkdir()
@@ -26,6 +28,8 @@ class Client:
 
         if arguments is None:
             arguments = []
+
+        arguments += self.launch_settings.make_parameters()
 
         self.process = subprocess.Popen(["wine", self.gamelauncher_path] + arguments,
                                         env=dict(os.environ, WINEPREFIX=self.wineprefix_path),

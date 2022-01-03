@@ -4,7 +4,7 @@ from typing import List
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QAction, \
-    QTableWidgetItem, QHeaderView
+    QTableWidgetItem, QHeaderView, qApp
 
 from game_utils.client_list import ClientList, Client
 from game_utils.exceptions.process_not_running_exception import ProcessNotRunningException
@@ -26,7 +26,7 @@ class MainUI(QMainWindow):
                                            callback=self.populate_client_table_widget)
 
         # UI elements
-        self.client_table_widget = CustomTableWidget(self)
+        self.client_table_widget = CustomTableWidget(self, client_list=self.client_list)
 
         self.launch_btn = QPushButton("Launch")
 
@@ -38,7 +38,7 @@ class MainUI(QMainWindow):
         file_menu = menubar.addMenu("File")
         exit_action = QAction("Exit", self)
         exit_action.setStatusTip("Exit Application")
-        exit_action.triggered.connect(lambda _: print("exit"))
+        exit_action.triggered.connect(qApp.quit)
 
         file_menu.addAction(exit_action)
 
@@ -115,13 +115,14 @@ class MainUI(QMainWindow):
         self.client_list.patch_all()
 
     def launch_btn_clicked(self):
-        row: List[QTableWidgetItem] = self.client_table_widget.selectedItems()
-        client: Client = self.client_list.get_client(row[0].text())
-        client.launch()
-        row[1].setText("Running")
-        row[2].setText(str(client.process.pid))
+        items: List[QTableWidgetItem] = self.client_table_widget.selectedItems()
+        for i in range(int(len(items) / 3)):
+            client: Client = self.client_list.get_client(items[i * 3].text())
+            client.launch()
+            items[i * 3 + 1].setText("Running")
+            items[i * 3 + 2].setText(str(client.process.pid))
 
-        threading.Thread(target=client.poll_status, args=(self.reset_client_process, )).start()
+            threading.Thread(target=client.poll_status, args=(self.reset_client_process, )).start()
 
     def reset_client_process(self, client: Client):
         x: QTableWidgetItem = self.client_table_widget.findItems(client.name, Qt.MatchContains)[0]
