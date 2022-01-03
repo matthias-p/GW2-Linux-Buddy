@@ -17,6 +17,7 @@ class Client:
         self.gamelauncher_path = gamelauncher_path
 
         self.process: Union[subprocess.Popen, None] = None
+        self.launch_settings = LaunchSettings(self.name)
 
         if not wineprefix_path.exists():
             wineprefix_path.mkdir()
@@ -28,8 +29,7 @@ class Client:
         if arguments is None:
             arguments = []
 
-        launch_settings = LaunchSettings(self.name)
-        arguments += launch_settings.make_parameters()
+        arguments += self.launch_settings.make_parameters()
 
         self.process = subprocess.Popen(["wine", self.gamelauncher_path] + arguments,
                                         env=dict(os.environ, WINEPREFIX=self.wineprefix_path),

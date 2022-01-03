@@ -1,16 +1,14 @@
 """Settings for launch cl paramenters"""
-from pathlib import Path
 
 from PyQt5.QtWidgets import QWidget, QCheckBox, QVBoxLayout, QLabel, QHBoxLayout, QPushButton
 
-from game_utils.launch_settings import LaunchSettings
+from game_utils.client import Client
 
 
 class LaunchSettingsUI(QWidget):
-    def __init__(self, account_name: str):
+    def __init__(self, client: Client):
         super(LaunchSettingsUI, self).__init__()
-        self.account_name = account_name
-        self.launch_settings = LaunchSettings(account_name)
+        self.client = client
 
         self.autologin_cbx = QCheckBox()
         self.bmp_cbx = QCheckBox()
@@ -43,7 +41,7 @@ class LaunchSettingsUI(QWidget):
                          ]
 
         self.mapping = {}
-        for cbx, value in zip(self.cbx_list, self.launch_settings.__dict__):
+        for cbx, value in zip(self.cbx_list, self.client.launch_settings.get_launch_parameter_dict()):
             self.mapping[cbx] = value
 
         self.init_ui()
@@ -56,7 +54,7 @@ class LaunchSettingsUI(QWidget):
         self.cancel_btn.clicked.connect(self.cancel_btn_pressed)
 
         base_vbox = QVBoxLayout()
-        for (name, value), cbx in zip(self.launch_settings.__dict__.items(), self.cbx_list):
+        for (name, value), cbx in zip(self.client.launch_settings.get_launch_parameter_dict().items(), self.cbx_list):
             cbx.setChecked(value)
             hbox = QHBoxLayout()
             hbox.addWidget(QLabel(name))
@@ -79,10 +77,10 @@ class LaunchSettingsUI(QWidget):
     def cbx_state_changed(self):
         sender = self.sender()
         x = self.mapping.get(sender)
-        self.launch_settings.__dict__[x] = sender.isChecked()
+        self.client.launch_settings.__dict__[x] = sender.isChecked()
 
     def ok_btn_pressed(self):
-        self.launch_settings.write(Path(f"~/.linux_buddy/{self.account_name}.json").expanduser().resolve())
+        self.client.launch_settings.write()
         self.close()
 
     def cancel_btn_pressed(self):
