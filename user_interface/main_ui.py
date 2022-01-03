@@ -4,10 +4,11 @@ from typing import List
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QAction, \
-    QTableWidgetItem, QHeaderView, qApp
+    QTableWidgetItem, QHeaderView, qApp, QMessageBox
 
 from game_utils.client_list import ClientList, Client
 from game_utils.exceptions.process_not_running_exception import ProcessNotRunningException
+from game_utils.gw2_api import Gw2API
 from lb_settings.settings import Settings
 from user_interface.add_account_ui import AddAccountUI
 from user_interface.settings_ui import SettingsUI
@@ -62,6 +63,8 @@ class MainUI(QMainWindow):
         self.statusBar()
 
         # UI Elements
+        self.settings_ui.close_signal.connect(self.close_settings_event)
+
         self.client_table_widget.setColumnCount(3)
         self.client_table_widget.setHorizontalHeaderLabels(["Account Name", "Process", "PID"])
         self.client_table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
@@ -91,6 +94,28 @@ class MainUI(QMainWindow):
                 self.client_list.get_client(client_name).stop()
             except ProcessNotRunningException:
                 pass
+
+    def show(self) -> None:
+        super(MainUI, self).show()
+        self.compare_game_version()
+
+    def close_settings_event(self):
+        self.client_list = ClientList(self.settings)
+        self.populate_client_table_widget()
+
+    def compare_game_version(self):
+        api_game_version = Gw2API().get_build()
+        if self.settings.game_version != api_game_version:
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("Game Version Check")
+            msg_box.setText(f"GW2 Build: {api_game_version}\n"
+                            f"Settings Build: {self.settings.game_version}\n"
+                            f"Press Ok to update your locales")
+            msg_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+            return_value = msg_box.exec_()
+            if return_value == QMessageBox.Ok:
+                self.update_account_action_triggered()
 
     def show_settings_ui(self):
         self.settings_ui.show()

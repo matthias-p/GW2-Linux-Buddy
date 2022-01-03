@@ -1,10 +1,14 @@
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, \
     QFileDialog
+from PyQt5.QtCore import pyqtSignal
 
 from lb_settings.settings import Settings
 
 
 class SettingsUI(QWidget):
+    close_signal = pyqtSignal()
+
     def __init__(self, settings: Settings):
         super(SettingsUI, self).__init__()
         self.settings = settings
@@ -62,6 +66,10 @@ class SettingsUI(QWidget):
 
         self.resize(500, 200)
         self.setWindowTitle("Linux Buddy - Settings")
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        super(SettingsUI, self).closeEvent(a0)
+        self.close_signal.emit()
 
     def wineprefix_btn_clicked(self):
         dirname = QFileDialog.getExistingDirectory(self, "Select Wineprefix dir")

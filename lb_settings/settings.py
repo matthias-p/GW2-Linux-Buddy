@@ -1,16 +1,20 @@
 from pathlib import Path
 import json
 
+from game_utils.gw2_api import Gw2API
+
 
 class Settings:
     settings_path: Path = Path("~/.linux_buddy/settings.json").expanduser().resolve()
     wineprefix_path: Path = None
     gamelauncher_path: Path = None
+    game_version: str = None
 
     def __init__(self, wineprefix_path: str = "~/.linux_buddy/wineprefixes/",
                  gamelauncher_path: str = "~/.linux_buddy/Guild Wars 2/"):
         self.set_wineprefix_path(wineprefix_path)
         self.set_gamelauncher_path(gamelauncher_path)
+        self.game_version = Gw2API.get_build()
 
         self.wineprefix_path.mkdir(parents=True, exist_ok=True)
         self.gamelauncher_path.mkdir(parents=True, exist_ok=True)
@@ -30,6 +34,7 @@ class Settings:
             json.dump({
                 "wineprefix_path": str(self.wineprefix_path),
                 "gamelauncher_path": str(self.gamelauncher_path),
+                "game_version": self.game_version,
             }, settings_file, indent=4)
 
     def load(self):
@@ -38,3 +43,4 @@ class Settings:
 
         self.set_wineprefix_path(json_dict.get("wineprefix_path"))
         self.set_gamelauncher_path(json_dict.get("gamelauncher_path"))
+        self.game_version = json_dict.get("game_version")

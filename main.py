@@ -8,6 +8,7 @@ from user_interface.main_ui import MainUI
 
 def main():
     settings = Settings()
+    settings.save()
     app = QApplication(sys.argv)
     main_ui = MainUI(settings)
     main_ui.show()
